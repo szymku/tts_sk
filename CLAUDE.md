@@ -32,14 +32,14 @@ tts_sk/
 ├── An_Audio_Guide.txt            # Sample source
 │
 ├── [Learning Documentation] (9 files, ~12K lines total)
-├── naming-conventions-php-vs-go.md
-├── backend-design-patterns-php-vs-go.md
-├── microservices-patterns-php-vs-go.md
-├── cross-cutting-patterns-php-vs-go.md
-├── system-architecture-patterns-php-vs-go.md
-├── testing-patterns-php-vs-go.md
-├── data-persistence-patterns-sql-vs-nosql.md
-├── domain-driven-design-guide.md
+├── class-role-naming-patterns.md
+├── classic-design-patterns-comparison.md
+├── distributed-systems-microservices-patterns.md
+├── production-operations-patterns.md
+├── application-architecture-styles.md
+├── testing-quality-assurance-patterns.md
+├── database-storage-patterns.md
+├── domain-driven-design-complete-guide.md
 │
 └── [Environment & Cache]
     ├── .venv/                    # Python virtual environment
@@ -218,7 +218,7 @@ This is a pure Python application - no compilation step needed. It runs as an in
 
 ### Learning Resource Documentation (PHP vs. Go Comparison Series)
 
-2. **naming-conventions-php-vs-go.md** (857 lines)
+2. **class-role-naming-patterns.md** (857 lines)
    - Naming conventions and class role patterns
    - Coordination & control patterns
    - Data access patterns
@@ -227,14 +227,14 @@ This is a pure Python application - no compilation step needed. It runs as an in
    - Language-specific idioms
    - Anti-patterns to avoid
 
-3. **backend-design-patterns-php-vs-go.md** (1,271 lines)
+3. **classic-design-patterns-comparison.md** (1,271 lines)
    - Backend design patterns comparison
    - Gang of Four patterns in PHP vs Go
    - Creational patterns (Factory, Singleton, Builder)
    - Structural patterns (Decorator, Adapter, Proxy)
    - Behavioral patterns (Observer, Strategy, Command)
 
-4. **microservices-patterns-php-vs-go.md** (2,915 lines)
+4. **distributed-systems-microservices-patterns.md** (2,915 lines)
    - Microservices architecture patterns
    - CQRS (Command Query Responsibility Segregation)
    - Event Sourcing
@@ -243,7 +243,7 @@ This is a pure Python application - no compilation step needed. It runs as an in
    - Service discovery patterns
    - Load balancing strategies
 
-5. **cross-cutting-patterns-php-vs-go.md** (3,698 lines)
+5. **production-operations-patterns.md** (3,698 lines)
    - Security patterns (authentication, authorization, encryption)
    - API design patterns
    - Performance optimization
@@ -252,7 +252,7 @@ This is a pure Python application - no compilation step needed. It runs as an in
    - Error handling and resilience
    - Rate limiting and caching
 
-6. **system-architecture-patterns-php-vs-go.md** (804 lines)
+6. **application-architecture-styles.md** (804 lines)
    - Hexagonal (ports and adapters) architecture
    - Clean Architecture
    - SOLID principles
@@ -260,7 +260,7 @@ This is a pure Python application - no compilation step needed. It runs as an in
    - Event-driven architecture
    - Database integration patterns
 
-7. **testing-patterns-php-vs-go.md** (1,550 lines)
+7. **testing-quality-assurance-patterns.md** (1,550 lines)
    - Unit testing strategies
    - Integration testing
    - Test doubles (mocks, stubs, fakes)
@@ -268,7 +268,7 @@ This is a pure Python application - no compilation step needed. It runs as an in
    - Property-based testing
    - Contract testing for microservices
 
-8. **data-persistence-patterns-sql-vs-nosql.md** (317 lines)
+8. **database-storage-patterns.md** (317 lines)
    - SQL vs NoSQL tradeoffs
    - Relational database patterns
    - Document store patterns
@@ -276,7 +276,7 @@ This is a pure Python application - no compilation step needed. It runs as an in
    - Data consistency models
    - Query optimization
 
-9. **domain-driven-design-guide.md** (561 lines)
+9. **domain-driven-design-complete-guide.md** (561 lines)
    - DDD philosophy and principles
    - Bounded contexts
    - Context mapping patterns
