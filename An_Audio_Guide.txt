@@ -1,0 +1,187 @@
+﻿An Audio Guide to Backend Design Patterns: PHP vs. Go
+Introduction: The Polyglot Developer's Guide
+Welcome to this guide on design patterns, crafted specifically for backend developers fluent in both PHP and Go. As a developer working with these two distinct languages, you already know that a language isn't just syntax; it's a philosophy. This guide explores that philosophical divide.
+We will cover the 23 classic "Gang of Four" (GoF) patterns, which are the bedrock of object-oriented design. Then, we'll explore a set of modern patterns essential for building the distributed, cloud-native systems you're likely working on today.
+The core of our discussion will be the implementation of these patterns. How does a pattern built for the classic, inheritance-based world of PHP translate to Go's world of interfaces and composition?
+The Philosophical Divide: Inheritance vs. Composition
+This is the most important concept to grasp.
+The PHP Paradigm: PHP is a mature, object-oriented language. You build with classes, abstract classes, inheritance (using extends), and explicit interfaces (using implements). This is the world the GoF patterns were originally designed for.
+The Go Paradigm: Go is often described as a "post-OOP" language. It intentionally omits class-based inheritance, forcing a different, and often simpler, way of thinking. Go's philosophy is "composition over inheritance". You achieve polymorphism and code reuse through two primary mechanisms:
+1. Implicit Interfaces: In Go, a type implicitly satisfies an interface if it just has the right methods. There is no implements keyword. This decouples the definition of behavior from the implementation.
+2. Struct Embedding: This is Go's tool for composition. You embed one struct within another, and the outer struct gains the fields and methods of the inner one.
+As we go through the patterns, we'll see how some are completely different in Go, while others are simply built-in features of the language.
+Part 1: The "Gang of Four" (GoF) Patterns
+Let's dive into the 23 classic patterns, broken down by their original categories.
+1.1: Creational Patterns
+These patterns deal with object creation mechanisms, trying to create objects in a manner suitable to the situation.
+1. Factory Method
+* Summary: Defines an interface for creating an object, but lets subclasses decide which class to instantiate.
+* PHP vs. Go:
+   * In PHP, this is a classic. You'd have an abstract Creator class with an abstract factoryMethod(). A FileLoggerCreator extends this base class and implements the method to return a FileLogger. This pattern relies entirely on inheritance.
+   * In Go, this classic form isn't possible because there's no inheritance. The idiomatic equivalent is a Simple Factory. This is just a standalone function, like NewLogger, that takes a string (e.g., "file" or "database") and returns the interface type, Logger. The goal is the same—decoupling the client from the concrete class—but the mechanism is different.
+2. Abstract Factory
+* Summary: Provides an interface for creating families of related objects (like a Button and a Checkbox for a specific OS) without specifying their concrete classes.
+* PHP vs. Go:
+   * This pattern translates beautifully to both languages because it's based on interfaces, not inheritance.
+   * In PHP, you'd define a GUIFactory interface with methods like createButton() and createCheckbox(). A WindowsFactory class would then implement this interface. * In Go, it's identical. You define a Go interface, say ISportsFactory, with methods like makeShoe() and makeShirt(). A NikeFactory struct would then provide those methods, implicitly satisfying the interface.
+3. Builder
+* Summary: Lets you construct complex objects step-by-step, allowing you to produce different representations using the same construction code.
+* PHP vs. Go:
+   * In PHP, you see this constantly with "fluent interfaces," like an SQL query builder. You'd have a MysqlQueryBuilder class and chain methods like $builder->select(...) then ->where(...) and finally ->getSQL().
+   * In Go, the structure is very similar. You define an IBuilder interface with steps like setWindowType(). A NormalBuilder struct implements these. You can also have an optional Director struct that takes the builder and runs the steps in a specific order. A very popular and more idiomatic Go alternative is the "Functional Options" pattern, which achieves a similar goal.
+4. Prototype
+* Summary: Lets you copy existing objects without making your code dependent on their classes.
+* PHP vs. Go:
+   * This pattern highlights differences in language features. PHP has this pattern built-in with the clone keyword. You can even customize the cloning logic by implementing the __clone() magic method.
+   * Go does not have a built-in clone feature. To use this pattern, you must explicitly define a Clone() method on your interface (e.g., Inode) and then implement it on your concrete types (File, Folder) to manually copy all the fields.
+5. Singleton
+* Summary: Ensures a class has only one instance and provides a global access point to that instance.
+* PHP vs. Go:
+   * This pattern clearly shows the different concerns of each language. In PHP, you create a Singleton using a private static $instance variable and a private constructor. Thread-safety is rarely a concern in a typical share-nothing web request.
+   * In Go, a language built for concurrency, thread-safe initialization is critical. A naive implementation is dangerous. The idiomatic way to create a Singleton in Go is to use the sync.Once utility. Its once.Do() function guarantees that the initialization code runs exactly once, no matter how many goroutines try to call it at the same time.
+#### 1.2: Structural Patterns
+These patterns explain how to assemble objects and classes into larger structures, while keeping the structures flexible and efficient.
+6. Adapter
+* Summary: Allows objects with incompatible interfaces to collaborate.
+* PHP vs. Go:
+   * In PHP, you'd have your client code expect a PaymentProvider interface. If you have a StripeGateway class with a different API, you create a StripeAdapter that implements PaymentProvider and, inside its methods, translates the calls to the StripeGateway's methods.
+   * In Go, this pattern is even more elegant due to implicit interfaces. Imagine your client expects a Computer interface with a InsertIntoLightningPort() method. Your Windows struct, however, has an insertIntoUSBPort() method. You simply create a WindowsAdapter struct that holds the Windows machine and has one method: InsertIntoLightningPort(). Inside, it calls the Windows machine's USB method. Because it has this method, it automatically satisfies the Computer interface without any implements keyword.
+7. Bridge
+* Summary: Splits a large class or a set of closely related classes into two separate hierarchies—an abstraction and an implementation—that can be developed independently.
+* PHP vs. Go:
+   * This is a pure composition pattern, and it's fundamental to good Go design.
+   * In PHP, you'd have an abstract Page class (the abstraction) that holds a reference to a Renderer interface (the implementation). This allows you to combine a SimplePage with either an HtmlRenderer or a JsonRenderer.
+   * In Go, this is just standard, idiomatic code. You'd have a Mac struct (abstraction) that holds a field of type Printer (an interface). You can then "bridge" it by assigning an Epson struct or an Hp struct to that field.
+8. Composite
+* Summary: Lets you compose objects into tree structures (like a file system) and then work with these structures as if they were individual objects.
+* PHP vs. Go:
+   * This pattern works perfectly with interfaces in both languages.
+   * In PHP, you define a Graphic interface with a draw() method. A Dot (a leaf) implements it. A Picture (a composite) also implements it, and its draw() method simply iterates over its children (which are also Graphic objects) and calls draw() on them.
+   * In Go, it's identical. An interface Component has a search() method. A File (leaf) implements search(). A Folder (composite) implements search() by iterating its slice of Component children and calling search() on each one.
+9. Decorator
+* Summary: Lets you attach new behaviors to objects dynamically by placing them inside special wrapper objects that contain the behaviors.
+* PHP vs. Go:
+   * This is another core compositional pattern that is natural in both languages.
+   * In PHP, your EmailNotifier implements the Notifier interface. To add SMS functionality, you create an SmsDecorator that also implements Notifier. It takes a Notifier object in its constructor. Its send() method first calls the wrapped object's send() method, and then adds its own SMS logic.
+   * In Go, it's the same. A VeggieMania pizza struct implements the IPizza interface. A CheeseTopping struct also implements IPizza and holds an IPizza field. Its GetPrice() method calls the wrapped pizza's GetPrice() and then adds its own price.
+10. Facade
+* Summary: Provides a simplified, high-level interface to a complex library, framework, or set of classes.
+* PHP vs. Go:
+   * This pattern is universal and conceptually identical in both languages.
+   * In PHP, you might create a VideoConversionFacade with a single convertVideo() method. Internally, this method would instantiate and coordinate a dozen complex objects from a video-processing library.
+   * In Go, you might have a WalletFacade that hides the complexity of Account, SecurityCode, Wallet, and Ledger subsystems behind a simple AddMoneyToWallet() method.
+11. Flyweight
+* Summary: Lets you fit more objects into memory by sharing common parts of state between multiple objects, instead of each object storing all the data.
+* PHP vs. Go:
+   * The implementation is conceptually the same. The key is a factory that manages a pool of shared objects.
+   * In PHP, to render millions of particles in a game, you'd have a ParticleFactory. It would store and reuse a few ParticleType objects (this is the flyweight, holding shared color and texture). The Particle object itself (the context) would only store its unique state (like its X/Y position) and a reference to the shared ParticleType.
+   * In Go, a Counter-Strike game example works the same way. A Dre[span_37](start_span)[span_37](end_span)ssFactory creates and reuses a single TerroristDress object (the flyweight). Every Player object (the context) would store its unique location but would hold a reference to that one shared TerroristDress object.
+12. Proxy
+* **Summary: Provides a substitute or placeholder for another object. A proxy controls access to the original object, allowing you to perform actions either before or after the request gets to the original object.
+* PHP vs. Go:
+   * This pattern is very common. In PHP, you could create a CachingProxy that implements the Database interface, just like the RealDatabase class does. The proxy holds a reference to the RealDatabase. When its query() method is called, it first checks a local cache. If it misses, then it calls the RealDatabase's query() method and stores the result before returning it.
+   * In Go, a great example is a proxy for rate limiting. An NginxProxy struct implements the Server interface, just like the real Application struct does. Its HandleRequest() method first checks a rate limit map. If the request is allowed, it then forwards the call to the real Application object it's proxying for.
+1.3: Behavioral Patterns
+These patterns are all about algorithms and the assignment of responsibilities between objects.
+13. Chain of Responsibility
+* Summary: Lets you pass requests along a chain of handlers. Upon receiving a request, each handler decides whether to process it or to pass it to the next handler in the chain.
+* PHP vs. Go:
+   * This pattern clearly highlights the inheritance-vs-composition difference.
+   * In PHP, a common implementation uses an AbstractHandler abstract class. This base class provides the logic for linking (a setNext() method and a private $nextHandler field). Concrete handlers like MonkeyHandler extend this class and just call parent::handle() to pass the request on.
+   * In Go, you use composition. You define a Department interface. Each concrete handler, like a Doctor struct, holds a field named next of type Department. The logic to call next.execute() is manually added to each handler's execute method where appropriate.
+14. Command
+* Summary: Turns a request into a stand-alone object that contains all information about that request. This lets you parameterize methods, delay execution, or support undoable operations.
+* PHP vs. Go:
+   * This pattern is clean and virtually identical in both languages.
+   * In PHP, you define a Command interface with an execute() method. A LightOnCommand class implements this and holds a reference to the Light object (the "receiver"). An Invoker (like a RemoteControl) holds a Command and just calls execute() on it.
+   * In Go, it's the same. A Command interface has an Execute() method. An OnCommand struct implements this and holds a Tv (receiver). A Button (invoker) holds a Command and calls Execute().
+15. Iterator
+* Summary: Lets you traverse elements of a collection without exposing its underlying representation (like a list, stack, or tree).
+* PHP vs. Go:
+   * This is another pattern heavily influenced by built-in language features.
+   * In PHP, this pattern is built into the language. By implementing the Iterator or IteratorAggregate interfaces, your custom collection object can be used directly in a foreach loop.
+   * In Go, this pattern is used less often because the built-in for...range loop already works for native slices, maps, and channels. However, if you build a custom data structure (like a binary tree), you would implement the full pattern by defining a Collection interface (with CreateIterator()) and an Iterator interface (with HasNext() and GetNext()).
+16. Mediator
+* Summary: Lets you reduce chaotic dependencies between objects. It restricts direct communication and forces objects to collaborate only through a central mediator object.
+* PHP vs. Go:
+   * This is a key pattern for simplifying complex logic in both languages.
+   * In PHP, a ChatRoom (the Mediator) implements a ChatMediator interface. User objects (Colleagues) hold a reference to the mediator and call mediator->sendMessage() instead of talking to other User objects directly.
+   * In Go, a StationManager (Mediator) manages train arrivals. The PassengerTrain and FreightTrain (Colleagues) don't know about each other; they just hold a reference to the mediator and call mediator.CanArrive(). In Go, channels also often serve as a lightweight, built-in form of mediation.
+17. Memento
+* Summary: Lets you save and restore the previous state of an object without revealing the details of its implementation.
+* PHP vs. Go:
+   * The goal is to let a Caretaker (like a "History" object) hold snapshots (Memento objects) of an Originator (like an Editor) without being able to modify the snapshot's internal state.
+   * In PHP, you'd achieve this with visibility keywords. The Memento's state might be private, and the Editor is given special access to it (perhaps as a friend, or by returning a limited interface).
+   * In Go, this is handled idiomatically using package visibility. The Memento struct's state field is unexported (it starts with a lowercase 's'). The Originator struct, being in the same package, can access this unexported field. But the C caretaker, which lives in a different package (like main), cannot see or modify the state field, thus enforcing encapsulation perfectly.
+18. Observer
+* Summary: Defines a subscription mechanism to notify multiple objects (Observers) about any events that happen to the object they're observing (the Subject).
+* PHP vs. Go:
+   * In PHP, this is standardized. You can implement the built-in SplSubject and SplObserver interfaces. Your Subject class manages a list of observers and calls observer->update() on each one when a change happens.
+   * In Go, you can build this manually. An Item (Subject) struct holds a slice of Observer interfaces. When the item is back in stock, it just loops over the slice and calls observer.Update() on each one. A more "Go-native" way to implement this pattern is often with channels, where the "subject" fans out a message to multiple listening goroutines.
+19. State
+* Summary: Lets an object alter its behavior when its internal state changes. From the outside, it appears as if the object changed its class.
+* PHP vs. Go:
+   * This is a very powerful pattern and is implemented almost identically in both languages.
+   * In PHP, a Document (the Context) holds a private $state variable. This variable holds an object like DraftState or PublishedState. These state objects all implement a State interface. When you call document->publish(), the document just delegates the call to its current state object: $this->state->publish($this). The DraftState's publish() method will then change the document's internal state to a new PublishedState object.
+   * In Go, it's the same. A VendingMachine (Context) holds a currentState field, which is a State interface. All its public methods, like RequestItem(), are just one-line calls that delegate to currentState.RequestItem(). The logic for transitioning to the next state is encapsulated entirely within the concrete state structs.
+20. Strategy
+* Summary: Defines a family of algorithms, puts each of them into a separate class, and makes their objects interchangeable.
+* PHP vs. Go:
+   * Structurally, this pattern is identical to the State and Bridge patterns. It's all about composition.
+   * In PHP, a ShoppingCart (Context) holds a $strategy field of type PaymentStrategy. You can set this to CreditCardStrategy or PaypalStrategy at runtime. When checkout() is called, it just delegates to strategy->pay().
+   * In Go, a Cache (Context) holds an evictionAlgo field, which is an EvictionAlgo interface. You can set this to a Fifo struct or an Lru struct at runtime. When the cache is full, it just calls evictionAlgo.Evict().
+21. Template Method
+* Summary: Defines the skeleton of an algorithm in a superclass, but lets subclasses override specific steps of the algorithm without changing its structure.
+* PHP vs. Go:
+   * This is the most inheritance-heavy pattern, and it shows the biggest philosophical divide.
+   * In PHP, this is simple and natural. You create an abstract class DataMiner. It has a public final function mine() (the template method). This method, in turn, calls the protected abstract methods openFile(), extractData(), and closeFile(). Subclasses like PdfMiner extend DataMiner and just fill in those abstract methods.
+   * In Go, this pattern is very awkward. Because there is no inheritance, the workaround is to use composition in reverse. You create an Otp (Context) struct that holds an interface IOtp. The template method GenAndSendOTP() is on the Otp struct, and it calls the interface's methods (iOtp.GenRandomOTP(), etc.). The concrete "subclass" (Sms) implements the IOtp interface. Finally, the client has to manually inject the Sms struct into the Otp struct's interface field for it to work. It's functional, but it shows how Go's design discourages this rigid parent-child relationship.
+22. Visitor
+* Summary: Lets you separate algorithms from the objects on which they operate. This allows you to add new operations to existing classes without modifying them.
+* PHP vs. Go:
+   * This is a complex pattern but is implemented similarly in both languages using a technique called "double dispatch."
+   * In PHP, you want to add an "export to XML" function to Dot and Circle classes without touching them. You define a Visitor interface with visitDot(Dot $d) and visitCircle(Circle $c) methods. Your XMLExportVisitor implements this. To make it work, each element must have an accept(Visitor $v) method. The Dot's accept method simply calls $v->visitDot($this).
+   * This works exactly the same way in Go. A Shape interface requires an Accept(Visitor) method. A Square struct's Accept method calls v.VisitForSquare(s).
+23. Interpreter
+* Summary: Given a language, this pattern defines a representation for its grammar along with an interpreter that uses the representation to interpret sentences.
+* PHP vs. Go:
+   * This is a highly specialized pattern, but the implementation is similar. In both PHP and Go , you build an Abstract Syntax Tree. You'd have an Expression interface with an interpret() method. A Number (a terminal expression) would just return its value. A Plus (a non-terminal expression) would hold two other Expression objects and return the sum of their interpret() results.
+---
+Part 2: Modern Backend & Microservice Patterns
+While the GoF patterns are about designing classes, modern patterns are about designing systems—especially distributed ones.
+1. Dependency Injection (DI) vs. Service Locator (SL)
+* Summary: These patterns both solve the problem of decoupling a class from the creation of its dependencies.
+* The Difference:
+   * With Dependency Injection (DI), dependencies are pushed into a class from the outside, usually via its constructor. The class is passive. In PHP, this is often handled automatically by a "magic" auto-wiring container in frameworks like Symfony. In idiomatic Go, this is done explicitly and manually. In your main.go file, you create a concrete MySqlUserRepository and pass it to the NewUserService constructor, which only accepts a UserRepository interface.
+   * With Service Locator (SL), the class is active. It holds a reference to the locator and pulls its dependencies by calling locator.get("database").
+* Verdict: Service Locator is now widely considered an anti-pattern. It hides a class's dependencies (making the code hard to reason about) and makes testing difficult. Dependency Injection is the universally preferred approach.
+2. API Gateway
+* Summary: This is a server that acts as the single entry point for all client requests. It then routes those requests to the appropriate internal microservices. This is essential for a microservice architecture.
+* Key Sub-Patterns:
+   * Gateway Aggregation: Instead of your mobile app making 10 separate calls to 10 microservices, it makes one call to the Gateway. The Gateway then calls all 10 services internally and aggregates their responses into a single payload.
+   * Gateway Offloading: The Gateway handles "cross-cutting concerns" like authentication, rate limiting, and SSL termination, so the individual microservices (whether in PHP or Go) don't have to.
+* Implementation: Go is an extremely popular choice for building high-performance API Gateways due to its lightweight concurrency and excellent net/http/httputil package for building reverse proxies.
+3. Backend-for-Frontend (BFF)
+* Summary: This is a variation of the API Gateway. Instead of one "one-size-fits-all" gateway, you create a separate, specialized gateway for each type of client.
+* Why? Your web app may need rich, complex data, while your mobile app needs a lean, simple JSON payload. A BFF provides a tailored API for each frontend experience. You could have a BFF written in PHP (perhaps using Symfony) for your web app and a separate, high-performance BFF written in Go for your mobile API.
+4. Strangler Fig
+* Summary: A pattern for incrementally migrating a legacy monolith to microservices. You place a proxy in front of the monolith. New requests are "strangled" and routed to new microservices, while old functionality is still passed through to the monolith.
+* Relevance: This is a practical, life-saving strategy for developers. You can place a Go-based API Gateway in front of your legacy PHP monolith. When you build a new "user service" in Go, you configure the gateway to route all /api/v2/users requests to the new service, while all other requests (like /api/v1/orders) are passed through to the old PHP app. Over time, you build more new services and route more traffic away, until the monolith is "strangled" and can be retired.
+5. Circuit Breaker
+* Summary: A component that monitors for failures in a remote service. If failures exceed a threshold, the "circuit" opens, and all subsequent calls fail fast (without even trying) to prevent a cascading system failure.
+* Why? If your OrderService calls a PaymentService that is down, you don't want the OrderService to hang for 30 seconds on every request, piling up connections. The Circuit Breaker wraps this call. After, say, 5 failed attempts, it "opens" and for the next 60 seconds, it immediately rejects all calls to the PaymentService, giving it time to recover.
+6. CQRS (Command Query Responsibility Segregation)
+* Summary: A powerful pattern that separates the model for writing data (a "Command") from the model for reading data (a "Query").
+* Why? In a microservice architecture, you can't just JOIN data from five different service databases. With CQRS, your write-model handles a "Command" (like CreateOrder), updates its own database, and then publishes an event. A separate "Query" service listens for these events and builds a pre-joined, denormalized "read model" in its own database (often a NoSQL store optimized for fast reads). When a client asks for data, it queries this fast, simple read-model.
+7. Event Sourcing
+* Summary: A pattern where you persist the state of an entity as a sequence of immutable events rather than just its current state.
+* Why? Instead of a database row that says order_status = "shipped", you store a log of what happened: 1. OrderCreated, 2. OrderApproved, 3. OrderShipped. The current state is simply a projection calculated by replaying these events. This gives you a perfect, immutable audit log and is the perfect partner for CQRS. The event log is the write-model. The CQRS read-models are built by subscribing to this event log. Both PHP and Go have mature libraries to support this advanced pattern.
+8. Saga
+* Summary: A pattern for managing data consistency across multiple services without using locking, distributed transactions. A saga is a sequence of local transactions.
+* Why? You can't do a traditional database transaction across three different microservices. So, you use a Saga. To create an order, the OrderService starts a "Create Order" saga. It (1) saves its own order as "pending" (a local transaction) and (2) sends a ReservePayment command to the PaymentService. The PaymentService (3) runs its local transaction to reserve payment and (4) sends a PaymentApproved event. If the PaymentService fails, it sends a PaymentFailed event instead. The OrderService (which is listening) catches this and runs a compensating transaction to set its own order status to "failed". This manages the distributed transaction over time without a hard lock.
+Conclusion: The Right Tool for the Job
+The Gang of Four patterns are your toolbox for in-application design—how to build flexible, maintainable classes and objects. The modern patterns are your toolbox for inter-service design—how to build resilient, scalable, and independent distributed systems.
+As a developer working in both PHP and Go, you are in a unique position. You can leverage the rich, mature, class-based ecosystem of PHP for complex business logic, perhaps in a monolith or a BFF. And you can leverage the simplicity, high-performance concurrency, and compositional mindset of Go for building the network-heavy, concurrent services like API Gateways and backend processors that tie them all together.
+The patterns are not just rules; they are a shared vocabulary that allows you to use the best of both worlds.
+Cytowane prace
+1. Gang of Four (GOF) Design Patterns - GeeksforGeeks, https://www.geeksforgeeks.org/system-design/gang-of-four-gof-design-patterns/ 2. Design Patterns - Wikipedia, https://en.wikipedia.org/wiki/Design_Patterns 3. Finished All 23 Patterns? Let's Wrap It Up Together - Maxim Gorin, https://maxim-gorin.medium.com/finished-all-23-patterns-lets-wrap-it-up-together-f22c736ba5ad 4. Design Patterns for Modern Backend Development - GeeksforGeeks, https://www.geeksforgeeks.org/system-design/design-patterns-for-modern-backend-development/ 5. Design Patterns for Backend Development - DEV Community, https://dev.to/divine_nnanna2/design-patterns-for-backend-development-1h57 6. 10 microservices design patterns for better architecture - Medium, https://medium.com/capital-one-tech/10-microservices-design-patterns-for-better-architecture-befa810ca44e 7. SOLID Design Principles Explained: Building Better Software Architecture - DigitalOcean, https://www.digitalocean.com/community/conceptual-articles/s-o-l-i-d-the-first-five-principles-of-object-oriented-design 8. Go Doesn't Need Inheritance — Here's What It Does Instead (And Why It's Smarter) | by Sogol Hedayatmanesh | Medium, https://medium.com/@sogol.hedayatmanesh/go-doesnt-need-inheritance-here-s-what-it-does-instead-and-why-it-s-smarter-e6ca5063acd9 9. Composition over inheritance - Wikipedia, https://en.wikipedia.org/wiki/Composition_over_inheritance 10. Golang vs PHP - Ukiah Smith, https://ukiahsmith.com/blog/golang-vs-php/ 11. Idiomatic Go equivalent to subclasses - c++ - Stack Overflow, https://stackoverflow.com/questions/34636455/idiomatic-go-equivalent-to-subclasses 12. golang and composition over inheritance - Aran Wilkinson, https://aran.dev/posts/go-and-composition-over-inheritance/ 13. Creational Design Patterns - Refactoring.Guru, https://refactoring.guru/design-patterns/creational-patterns 14. Design Patterns in PHP - Refactoring.Guru, https://refactoring.guru/design-patterns/php 15. Design Patterns in Go - Refactoring.Guru, https://refactoring.guru/design-patterns/go 16. GoF Design patterns that still make sense in Go - DEV Community, https://dev.to/mauriciolinhares/gof-design-patterns-that-still-make-sense-in-go-27k5 17. Structural Design Patterns - Refactoring.Guru, https://refactoring.guru/design-patterns/structural-patterns 18. Facade Design Pattern in PHP - SourceMaking, https://sourcemaking.com/design_patterns/facade/php 19. Behavioral Design Patterns - Refactoring.Guru, https://refactoring.guru/design-patterns/behavioral-patterns 20. Chain of Responsibility in PHP / Design Patterns - Refactoring.Guru, https://refactoring.guru/design-patterns/chain-of-responsibility/php/example 21. Chain of Responsibility in Go / Design Patterns - Refactoring.Guru, https://refactoring.guru/design-patterns/chain-of-responsibility/go/example 22. Strategy in Go / Design Patterns - Refactoring.Guru, https://refactoring.guru/design-patterns/strategy/go/example 23. Interpreter Design Pattern - GeeksforGeeks, https://www.geeksforgeeks.org/system-design/interpreter-design-pattern/ 24. Unraveling the Interpreter Pattern: A Guide for Go Developers | by Sean Zheng | Medium, https://medium.com/@blackhorseya/unraveling-the-interpreter-pattern-a-guide-for-go-developers-a29e799198ab 25. Design Patterns in PHP 8: Interpreter - DEV Community, https://dev.to/zhukmax/design-patterns-in-php-8-interpreter-ee5 26. Interpreter Design Pattern in PHP - SourceMaking, https://sourcemaking.com/design_patterns/interpreter/php 27. Design Patterns - Interpreter Pattern - Tutorials Point, https://www.tutorialspoint.com/design_pattern/interpreter_pattern.htm 28. Dependency Injection vs. Service Locator | Baeldung on Computer Science, https://www.baeldung.com/cs/dependency-injection-vs-service-locator 29. What's the difference between the Dependency Injection and Service Locator patterns?, https://stackoverflow.com/questions/1557781/whats-the-difference-between-the-dependency-injection-and-service-locator-patte 30. Design Patterns for Modern Backend Development – with Example Use Cases, https://www.freecodecamp.org/news/design-pattern-for-modern-backend-development-and-use-cases/ 31. php - Service Locator, Dependency Injection (and Container) and Inversion of Control, https://stackoverflow.com/questions/10049940/service-locator-dependency-injection-and-container-and-inversion-of-control 32. How to Implement Dependency Injection in Go - Explained with Code Examples, https://www.freecodecamp.org/news/how-to-use-dependency-injection-in-go/ 33. go - How to write idiomatic constructor - Stack Overflow, https://stackoverflow.com/questions/59040392/how-to-write-idiomatic-constructor 34. Design patterns for microservices - Azure Architecture Center - Microsoft Learn, https://learn.microsoft.com/en-us/azure/architecture/microservices/design/patterns 35. Pattern: API Gateway / Backends for Frontends - Microservices.io, https://microservices.io/patterns/apigateway.html 36. API Gateway Patterns in Microservices - GeeksforGeeks, https://www.geeksforgeeks.org/system-design/api-gateway-patterns-in-microservices/ 37. The Anatomy of an API Gateway in Golang | HackerNoon, https://hackernoon.com/the-anatomy-of-an-api-gateway-in-golang 38. API Gateway Pattern. In this article, we are going to talk… | by Mehmet Ozkaya | Design Microservices Architecture with Patterns & Principles | Medium, https://medium.com/design-microservices-architecture-with-patterns/api-gateway-pattern-8ed0ddfce9df 39. Go simple API Gateway proxy - Stack Overflow, https://stackoverflow.com/questions/29476611/go-simple-api-gateway-proxy 40. Cloud design patterns, architectures, and implementations - AWS Prescriptive Guidance, https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/introduction.html 41. Cloud Design Patterns - Azure Architecture Center - Microsoft Learn, https://learn.microsoft.com/en-us/azure/architecture/patterns/ 42. The transition from PHP to Golang in 2023-24 - Reddit, https://www.reddit.com/r/golang/comments/16co28s/the_transition_from_php_to_golang_in_202324/ 43. Pattern: Database per service - Microservices.io, https://microservices.io/patterns/data/database-per-service 44. Pattern: Command Query Responsibility Segregation (CQRS), https://microservices.io/patterns/data/cqrs.html 45. A pattern language for microservices, https://microservices.io/patterns/ 46. Event sourcing pattern - AWS Prescriptive Guidance, https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/event-sourcing.html 47. Event Sourcing pattern - Azure Architecture Center | Microsoft Learn, https://learn.microsoft.com/en-us/azure/architecture/patterns/event-sourcing 48. Pattern: Event sourcing - Microservices.io, https://microservices.io/patterns/data/event-sourcing.html 49. Azure Cosmos DB design pattern: Event sourcing - Code Samples | Microsoft Learn, https://learn.microsoft.com/en-us/samples/azure-samples/cosmos-db-design-patterns/event-sourcing/ 50. Cutting Edge - Event Sourcing for the Common Application - Microsoft Learn, https://learn.microsoft.com/en-us/archive/msdn-magazine/2015/september/cutting-edge-event-sourcing-for-the-common-application 51. ecotoneframework/php-ddd-cqrs-event-sourcing-symfony-laravel-ecotone - GitHub, https://github.com/ecotoneframework/php-ddd-cqrs-event-sourcing-symfony-laravel-ecotone 52. xprt64/dudulina: CQRS + Event Sourcing library for PHP - GitHub, https://github.com/xprt64/dudulina 53. A curated list of awesome Command Query Responsibility Segregation (CQRS) and Event Sourcing(ES) with Go. - GitHub, https://github.com/snamiki1212/awesome-go-cqrs-event-sourcing 54. mishudark/eventhus: Go - CQRS / Event Sourcing made easy - GitHub, https://github.com/mishudark/eventhus 55. A small but complete CQRS / Event-Sourcing example : r/golang - Reddit, https://www.reddit.com/r/golang/comments/1gxz23o/a_small_but_complete_cqrs_eventsourcing_example/ 56. andreschaffer/event-sourcing-cqrs-examples - GitHub, https://github.com/andreschaffer/event-sourcing-cqrs-examples

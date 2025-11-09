@@ -1,0 +1,17 @@
+Welcome to the Kokoro Text-to-Speech Converter!
+
+This is a sample text file that you can use to test the text-to-speech conversion tool.
+
+The Kokoro-82M model is a high-quality, open-source text-to-speech system that produces natural-sounding audio. With 82 million parameters, it delivers excellent results while remaining efficient and fast.
+
+You can experiment with different voices, playback speeds, and output formats to find the perfect combination for your needs.
+
+Some interesting features to try:
+
+First, choose between male and female voices. Each voice has its own unique characteristics and tone. For example, Sarah has a clear and articulate style, while Adam provides a deep and authoritative sound.
+
+Second, adjust the playback speed. Slower speeds are great for learning and careful listening, while faster speeds work well for consuming content quickly.
+
+Third, select your preferred output format. WAV files offer the highest quality, while MP3 and OGG provide good quality with smaller file sizes.
+
+Have fun experimenting with this text-to-speech tool, and feel free to try it with your own documents, articles, or creative writing!
